@@ -7,7 +7,7 @@ from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_ollama import ChatOllama
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.prompts import ChatPromptTemplate
-
+import time
 embeddings = OllamaEmbeddings(model = 'deepseek-r1:1.5b')
 
 llm = ChatOllama(
@@ -21,9 +21,9 @@ vector_store = InMemoryVectorStore(embeddings)
 
 
 ds = [
-    './docs.pdf'
+    './datasheet.pdf', './datasheet1.pdf'
 ]
-RAW_KNOWLEDGE_BASE = PDFPlumberLoader('./datasheet.pdf').load()
+RAW_KNOWLEDGE_BASE = [doc for file in ds for doc in PDFPlumberLoader(file).load()]
 # print(RAW_KNOWLEDGE_BASE)
 EMBEDDING_MODEL_NAME = "deepseek-r1:1.5b"
 MARKDOWN_SEPARATORS = [
