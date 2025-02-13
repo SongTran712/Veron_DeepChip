@@ -14,6 +14,12 @@ from langgraph.graph import START, StateGraph
 from typing_extensions import List, TypedDict
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
+
+import tiktoken  # If using OpenAI-compatible models
+
+tokenizer = tiktoken.get_encoding("cl100k_base")  # Adjust for your model
+
+     
 PROMPT_TEMPLATE = """
 
 You are an expert research assistant. Use the provided context to answer the query. 
@@ -32,17 +38,17 @@ llm = ChatOllama(
     # num_predict = 256,
 )
 
+
 vector_store = InMemoryVectorStore(embeddings)
 print('loading pdf...')
 raw_docs = PDFPlumberLoader('./datasheet.pdf').load() #support OCR
 print("Splitting...")
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=100,chunk_overlap=0,
-        add_start_index=True)
-print(text_splitter[0])
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=10,
+       separators= ['\n\n', '\n', ' ', ''] )
 # documents = text_splitter.split_documents(raw_documents)
 all_splits = text_splitter.split_documents(raw_docs)
 _ = vector_store.add_documents(documents=all_splits)
-
+  
 
 def generate_answer(user_query, context_documents):
   context_text = "\n\n".join([doc.page_content for doc in context_documents])
