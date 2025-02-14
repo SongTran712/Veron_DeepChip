@@ -19,7 +19,6 @@ import tiktoken  # If using OpenAI-compatible models
 
 tokenizer = tiktoken.get_encoding("cl100k_base")  # Adjust for your model
 
-     
 PROMPT_TEMPLATE = """
 
 You are an expert research assistant. Use the provided context to answer the query. 
@@ -44,7 +43,7 @@ print('loading pdf...')
 raw_docs = PDFPlumberLoader('./datasheet.pdf').load() #support OCR
 print("Splitting...")
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=10,
-       separators= ['\n\n', '\n', ' ', ''] )
+      separators= ['\n\n', '\n', ' ', ''] )
 # documents = text_splitter.split_documents(raw_documents)
 all_splits = text_splitter.split_documents(raw_docs)
 _ = vector_store.add_documents(documents=all_splits)
