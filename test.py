@@ -1,99 +1,14 @@
-from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
-from langchain_community.embeddings import OllamaEmbeddings
-from transformers import AutoTokenizer
-from langchain.docstore.document import Document as LangchainDocument
-from langchain.docstore.document import Document as LangchainDocument
-from langchain_community.document_loaders import PDFPlumberLoader
-from langchain_ollama import ChatOllama
-from langchain_core.vectorstores import InMemoryVectorStore
-from langchain_core.prompts import ChatPromptTemplate
-import time
-from langchain_experimental.text_splitter import SemanticChunker
-from langchain_text_splitters import TokenTextSplitter
+import re
 
-embeddings = OllamaEmbeddings(model = 'deepseek-r1:1.5b')
-
-llm = ChatOllama(
-    model = "deepseek-r1:1.5b"
-)
-
-vector_store = InMemoryVectorStore(embeddings)
-
-ds = [
-    './survey.pdf'
-]
-
-RAW_KNOWLEDGE_BASE = [doc for file in ds for doc in PDFPlumberLoader(file).load()]
-# print(RAW_KNOWLEDGE_BASE)
-EMBEDDING_MODEL_NAME = "deepseek-r1:1.5b"
-MARKDOWN_SEPARATORS = [
-    "\n#{1,6} ",
-    "```\n",
-    "\n\\*\\*\\*+\n",
-    "\n---+\n",
-    "\n___+\n",
-    "\n\n",
-    "\n",
-    " ",
-    "",
-]
-
-PROMPT_TEMPLATE = """
-
-You are an expert research assistant. Use the provided context to answer the query. 
-If unsure, state that you don't know. Be concise and factual (max 3 sentences).
-
-Query: {user_query} 
-Context: {document_context} 
-Answer:
-"""
-
-text_splitter = SemanticChunker(embeddings)
-# docs = text_splitter.create_documents([])
-# text_splitter = TokenTextSplitter.from_tiktoken_encoder(
-#     chunk_size=20,
-#     chunk_overlap=4
-# )
-
-# text_splitter = CharacterTextSplitter(
-#     chunk_size=1000,  # The maximum number of characters in a chunk: we selected this value arbitrarily
-#     chunk_overlap=100,  # The number of characters to overlap between chunks
-#     add_start_index=True,  # If `True`, includes chunk's start index in metadata
-#     strip_whitespace=True,  # If `True`, strips whitespace from the start and end of every document
-#     separators=MARKDOWN_SEPARATORS,
-# )
-
-# docs_processed = []
-# for doc in RAW_KNOWLEDGE_BASE:
-#     docs_processed += text_splitter.split_documents([doc])
-# unique_texts = {}
-
-# docs_processed_unique = []
-
-# for doc in docs_processed:
-
-#     if doc.page_content not in unique_texts:
-
-#         unique_texts[doc.page_content] = True
-
-#         docs_processed_unique.append(doc)                                                                           
+def starts_with_number_dot(s):
+    return bool(re.match(r'^\d+\.', s))
 
 
-# _ = vector_store.add_documents(documents=docs_processed_unique)
+pattern = r"^\d"
 
+text1 = "123. Hello"   # Matches (starts with a number)
+# text2 = "Hello 123"   # Does not match (starts with a letter)
 
-# def generate_answer(user_query, context_documents):
-#     context_text = "\n\n".join([doc.page_content for doc in context_documents])
-#     conversation_prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-#     response_chain = conversation_prompt | llm
-#     return response_chain.invoke({"user_query": user_query, "document_context": context_text})
-
-# def find_related_documents(query):
-#     return vector_store.similarity_search(query)
-
-# # ai_response = generate_answer("")
-# print("finding related...")
-# docs = find_related_documents("What is PE1000N?")
-# print("gen...")
-# output = generate_answer("What is PE1000N?", docs)
-# print(output.content)
+# Check if text starts with a number
+print(starts_with_number_dot(text1)) 
+print(text1) 

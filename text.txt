@@ -1,0 +1,54 @@
+Verilog Coding Standards
+ATVN
+6.1.3. Testcase File Layout
+Testcase files, denoted by a .vc extension, must contain a standard file heading as Source File
+heading.
+6.1.4. Function Layout
+Every function must be preceded by a function heading with a proper border of Verilog comment. The
+heading consists of the blocks described below. The blocks are separated by single blank lines and
+may contain blank lines within the block.
+(cid:131) Title: One line containing the function name followed by a short description. The name in the
+title must be the same as the declared name.
+(cid:131) Description: One or more paragraph(s) describing in detail the functionality implemented by
+the function.
+Immediately following the function heading should be the function declaration. The format of these
+blocks is shown in the following example:
+////////////////////////////////////////////////////////////////////////////////<-80 chars
+// Comments for the following logic
+wire signal1;
+assign signal1 = ^signal2;
+reg [12:0] signal3;
+always @( posedge clk19 or negedge rst_ )
+begin
+if (!rst_)
+begin
+signal3 <= 13’b0;
+end
+else
+begin
+if (|signal3)
+begin
+signal3[2] <= signal4;
+end
+:
+:
+end
+end
+6.1.5. Code Layout
+This section describes the conventions for the graphic layout of Verilog code. The main goal behind
+the following recommendations is readability. Programmers are encouraged not to use multi-line
+cryptic expressions and statements.
+6.1.5.1. Vertical Spacing
+(cid:131) Use blank lines to make code more readable and to group logically related sections of code
+together. Put one blank line before and after comment lines.
+(cid:131) Do not use more than 2 blank lines for vertical separation.
+(cid:131) Do not put more than one declaration on a line. Each variable and function argument must be
+declared on a separate line. Do not use comma-separated lists to declare multiple identifiers.
+(cid:131) Do not put more than one statement on a line. The only exception is the for statement, where
+the initial, conditional, and loop statements may be written on a single line:
+for (reg = 0; reg < count; reg = req + 1)
+begin
+end
+The if statement which has a simple structure is also an exception, as shown below:
+Copyright © 2006. Arrive Technologies Inc. Page 3
+Internal Doc. Subject to Change

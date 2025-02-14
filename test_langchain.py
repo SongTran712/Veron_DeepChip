@@ -37,17 +37,15 @@ llm = ChatOllama(
     # num_predict = 256,
 )
 
-
 vector_store = InMemoryVectorStore(embeddings)
 print('loading pdf...')
-raw_docs = PDFPlumberLoader('./datasheet.pdf').load() #support OCR
+raw_docs = PDFPlumberLoader('./table.pdf').load() #support OCR
 print("Splitting...")
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=10,
-      separators= ['\n\n', '\n', ' ', ''] )
+text_splitter = CharacterTextSplitter(chunk_size=1000,chunk_overlap=10)
 # documents = text_splitter.split_documents(raw_documents)
 all_splits = text_splitter.split_documents(raw_docs)
-_ = vector_store.add_documents(documents=all_splits)
-  
+print(all_splits)
+# _ = vector_store.add_documents(documents=all_splits)
 
 def generate_answer(user_query, context_documents):
   context_text = "\n\n".join([doc.page_content for doc in context_documents])
@@ -58,9 +56,9 @@ def generate_answer(user_query, context_documents):
 def find_related_documents(query):
   return vector_store.similarity_search(query)
   
-# ai_response = generate_answer("")
-print("finding related...")
-docs = find_related_documents("What is PE1000N?")
-print("gen...")
-output = generate_answer("What is PE1000N?", docs)
-print(output.content)
+# # ai_response = generate_answer("")
+# print("finding related...")
+# docs = find_related_documents("What is PE1000N?")
+# print("gen...")
+# output = generate_answer("What is PE1000N?", docs)
+# print(output.content)
