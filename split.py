@@ -60,8 +60,9 @@ def check_session(pdf_path):
 from langchain_core.documents import Document
 pdf_path = "./code.pdf"
 content = check_session(pdf_path)
+content_split = [item for sublist in content_split for item in sublist]
 docs = []
-for index, cont in enumerate(content):
+for index, cont in enumerate(content_split):
     doc = Document(id=str(index+1), page_content = cont)
     docs.append(doc)
     
