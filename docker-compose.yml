@@ -12,5 +12,6 @@ services:
               count: all
               capabilities: [ gpu ]
     restart: always
+    command: python3 hold.py
     volumes:
       - ./backend:/app
