@@ -7,5 +7,5 @@ RUN apt-get update && apt-get install -y poppler-utils tesseract-ocr libmagic-de
 
 RUN pip install -Uq "unstructured[all-docs]" pillow lxml pillow
 RUN pip install -Uq chromadb tiktoken
-RUN pip install -Uq langchain langchain-community langchain-openai langchain-groq
+RUN pip install -Uq langchain langchain-community langchain-ollama
 RUN pip install -Uq python_dotenv
