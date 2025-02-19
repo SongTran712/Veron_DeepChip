@@ -1,5 +1,6 @@
 import pdfplumber
 import re
+import elastic
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain.embeddings import OllamaEmbeddings
 from langchain.chat_models import ChatOllama
@@ -29,7 +30,7 @@ def chunk_content(content, chunk_size=500, overlap=0):
 
 embeddings = OllamaEmbeddings(model = "deepseek-r1:1.5b")
 llm = ChatOllama(
-    model = "deepseek-r1:1.5b",
+    model = "llama3.2:1b",
     temperature = 0,
 )
 
@@ -92,10 +93,6 @@ from langchain_core.documents import Document
 pdf_path = "./code.pdf"
 sessions, texts, types = check_session(pdf_path)
 
-session = sessions[0]
-text = texts[0]
-typeD = types[0]
-
 def format_docs(docs):
     return "\n\n".join(
         f"Session: {doc.metadata['session']}\nType: {doc.metadata['type']}\nContent: {doc.page_content}"
@@ -115,14 +112,61 @@ Content: {context}
 prompt = ChatPromptTemplate.from_template(template)
 
 # Define RAG pipeline with metadata-aware retrieval
-rag_chain = (
+
+text_summarizes = []
+for i in range(len(sessions)):
+    text_summarize = f"This is {types[i]} of Session {sessions[i]} \n"
+    rag_chain = (
     RunnablePassthrough()  
     | prompt
     | ChatOllama(model="deepseek-r1:1.5b", temperature=0)
     | StrOutputParser()
 )
+    text_summarize += rag_chain.invoke({"context":texts[i]})   
+    text_summarizes.append(text_summarize)
 
-# Run query and save output
-output = rag_chain.invoke({"context": text})
-with open('output.txt', "w", encoding="utf-8") as f:
-    f.write(output)
+from sentence_transformers import SentenceTransformer
+model = SentenceTransformer('all-mpnet-base-v2')
+
+vector_summarizes = text_summarizes.apply(lambda x: model.encode(x))
+
+csv_filename = "output.csv"
+
+# Writing to CSV
+with open(csv_filename, mode="w", newline="", encoding="utf-8") as file:
+    writer = csv.writer(file)    
+    # Write header row
+    writer.writerow(["Session", "Type", "Data", "Summary", "Vector_summary"])
+    # Write data rows
+    for row in zip(sessions, types, texts, text_summaries, vector_summarizes):
+        writer.writerow(row)
+
+print(f"CSV file '{csv_filename}' created successfully!")
+
+
+# if not elastic.init_and_check():
+#     print("Elastic Server not connected")
+#     exit(1)
+# else:
+#     print("Elastic connect successful")
+# # assert 1 == 0
+
+# index_name = "lang_app"
+# if not elastic.create_index(index_name):
+#     print("Create Index fail")   
+#     exit(1)
+
+
+# if elastic.add_to_index(sessions, types, texts, summarizes, vector_summarizes):
+#     print("Add success")
+# else:
+#     exit(1)
+    
+# print(elastic.query_extract("If else code"))
+
+
+
+# # Run query and save output
+# output = rag_chain.invoke({"context": text})
+# with open('output.txt', "w", encoding="utf-8") as f:
+#     f.write(output)
