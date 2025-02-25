@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@nanostores/react": "github:ai/react",
     "frontend": "file:",
     "next": "15.1.7",
     "react": "^19.0.0",

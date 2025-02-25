@@ -54,7 +54,7 @@ def query_extract(input_keyword_encode):
   count_index = es.count(index="all_products")
   
   query = {
-      "field" : "DescriptionVector",
+      "field" : "vector_summary",
       "query_vector" : input_keyword_encode,
       "k" : 2,
       "num_candidates" : count_index, 

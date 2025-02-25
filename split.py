@@ -17,8 +17,8 @@ import pandas as pd
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain.storage import InMemoryStore
 import uuid
-from langchain_openai import ChatOpenAI
-from langchain_openai import OpenAIEmbeddings
+# from langchain_openai import ChatOpenAI
+# from langchain_openai import OpenAIEmbedding
 
 def chunk_content(content, chunk_size=500, overlap=0):
     text_splitter = RecursiveCharacterTextSplitter(
@@ -30,7 +30,7 @@ def chunk_content(content, chunk_size=500, overlap=0):
 
 embeddings = OllamaEmbeddings(model = "deepseek-r1:1.5b")
 llm = ChatOllama(
-    model = "llama3.2:1b",
+    model = "deepseek-r1:1.5b",
     temperature = 0,
 )
 
@@ -60,7 +60,6 @@ def check_session(pdf_path):
     types = []
     session = ""
     content = ""
-    # typeD = ""
     with pdfplumber.open(pdf_path) as pdf:
         for page_number in range(len(pdf.pages)):
             page = pdf.pages[page_number]
@@ -69,30 +68,31 @@ def check_session(pdf_path):
             if page_number < 3:
                 if text:
                     contents.append(text)
-                    sessions.append("begin")
-                    types.append("text")
+                    sessions.append("Begin of Doc")
+                    types.append("Text")
             else:
                 if text:
                     lines = text.split("\n") 
                     for index, line in enumerate(lines):
                         # print(line)
-                        if not line or index in [0, 1, len(lines) - 2, len(lines) - 1] or starts_with_double_slash(line):
+                        if index in [0, 1, len(lines) - 2, len(lines) - 1] or starts_with_double_slash(line):
                             # print("here")
                             continue  # Skip empty, header/footer, or comment lines
                         if starts_with_number_dot(line):
                             sessions.append(session)
-                            types.append("text")
-                            contents.append(content.strip())
+                            types.append("'Text")
+                            contents.append(content)
                             session = line  # Start new session
                             content = ""  # Reset content
                         else:
+                            # print(line)
                             content +=  line + "\n"  # Append to session content    types.append("table")
     return sessions, contents, types
 
 from langchain_core.documents import Document
 pdf_path = "./code.pdf"
 sessions, texts, types = check_session(pdf_path)
-
+# assert 1 == 0
 def format_docs(docs):
     return "\n\n".join(
         f"Session: {doc.metadata['session']}\nType: {doc.metadata['type']}\nContent: {doc.page_content}"
@@ -113,36 +113,49 @@ prompt = ChatPromptTemplate.from_template(template)
 
 # Define RAG pipeline with metadata-aware retrieval
 
+prompting = ChatOllama(model="llama3.2:1b", temperature=0)
 text_summarizes = []
 for i in range(len(sessions)):
-    text_summarize = f"This is {types[i]} of Session {sessions[i]} \n"
-    rag_chain = (
-    RunnablePassthrough()  
-    | prompt
-    | ChatOllama(model="deepseek-r1:1.5b", temperature=0)
-    | StrOutputParser()
-)
-    text_summarize += rag_chain.invoke({"context":texts[i]})   
-    text_summarizes.append(text_summarize)
+    try:
+        text_summarize = f"This is {types[i]} of Session {sessions[i]} \n"
+        rag_chain = (
+        RunnablePassthrough()  
+        | prompt
+        | prompting
+        | StrOutputParser()
+    )
+        text_summarize += rag_chain.invoke({"context":texts[i]})   
+        text_summarizes.append(text_summarize)    
+        print("Text: ", texts[i])
+        print("text Summary: ", text_summarize)
+        print(f"Summarize {i} success")
+    except Exception:
+        print("error in {i}")
+        
+embed = OllamaEmbeddings(model="llama3.2:1b")
+vector_summarizes = [embed.embed_query(x) for x in text_summarizes]
 
-from sentence_transformers import SentenceTransformer
-model = SentenceTransformer('all-mpnet-base-v2')
+import pandas as pd
+df = pd.DataFrame({
+    'Sessions': sessions[:10],
+    'Types': types[:10],
+    'Summary': text_summarizes,
+    'Data': texts[:10],
+    'Vector Summary': vector_summarizes
+})
 
-vector_summarizes = text_summarizes.apply(lambda x: model.encode(x))
+df.to_csv('data.csv', index=False)
 
-csv_filename = "output.csv"
+print("CSV file 'data.csv' has been saved successfully!")
 
-# Writing to CSV
-with open(csv_filename, mode="w", newline="", encoding="utf-8") as file:
-    writer = csv.writer(file)    
-    # Write header row
-    writer.writerow(["Session", "Type", "Data", "Summary", "Vector_summary"])
-    # Write data rows
-    for row in zip(sessions, types, texts, text_summaries, vector_summarizes):
-        writer.writerow(row)
 
-print(f"CSV file '{csv_filename}' created successfully!")
+import pandas as pd
 
+# Read the CSV file
+# df = pd.read_csv('data.csv')
+
+# Print the DataFrame
+print(df['Summary'], df['Data'])
 
 # if not elastic.init_and_check():
 #     print("Elastic Server not connected")
